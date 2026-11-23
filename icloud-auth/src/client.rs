@@ -687,8 +687,18 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         let res = parse_response(res).await?;
         let err_check = Self::check_error(&res);
         if err_check.is_err() {
+            if let Some(d) = res.as_dictionary() {
+                let mut dump = String::new();
+                for (k, v) in d.iter() {
+                    let sv = format!("{:?}", v);
+                    dump.push_str(&format!("{}={}  ", k, &sv[..sv.len().min(60)]));
+                }
+                eprintln!("[icloud-auth] srp init response keys: {}", &dump[..dump.len().min(1500)]);
+            }
             return Err(err_check.err().unwrap());
         }
+        eprintln!("[icloud-auth] srp init ok; sp={:?} ps={:?} i={:?}",
+            res.get("sp"), res.get("ps"), res.get("i"));
         // println!("{:?}", res);
         let salt = res.get("s").unwrap().as_data().unwrap();
         let b_pub = res.get("B").unwrap().as_data().unwrap(); // got this
