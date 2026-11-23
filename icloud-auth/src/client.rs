@@ -303,8 +303,11 @@ impl<T: AnisetteProvider> AppleAccount<T> {
                     response = _self.verify_2fa(tfa_closure()).await?
                 }
                 LoginState::NeedsSMS2FA | LoginState::NeedsDevice2FA => {
+                    // 先推送到已信任设备（iPhone 弹窗），再让用户输入设备上显示的 6 位码。
+                    // 原实现无条件走 SMS(phone_id=1)，Apple 直接 401，导致整个登录失败。
                     _self.send_2fa_to_devices().await?;
-                    response = _self.send_sms_2fa_to_devices(1).await?
+                    eprintln!(">>> 已在你的 iPhone 上推送登录请求：请点『允许』，然后输入屏幕上显示的 6 位验证码");
+                    response = _self.verify_2fa(tfa_closure()).await?
                 }
                 LoginState::NeedsSMS2FAVerification(body) => {
                     response = _self.verify_sms_2fa(tfa_closure(), body).await?
