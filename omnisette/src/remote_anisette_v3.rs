@@ -106,14 +106,13 @@ impl AnisetteState {
         self.adi_pb.is_some()
     }
 
-    fn md_lu(&self) -> [u8; 32] {
-        let mut hasher = Sha256::new();
-        hasher.update(&self.keychain_identifier);
-        hasher.finalize().into()
+    /// 真机上 X-Apple-I-MD-LU = base64(大写 UUID 字符串)，不是 sha256 的 hex
+    fn md_lu(&self) -> String {
+        base64_encode(self.device_id().as_bytes())
     }
 
     fn device_id(&self) -> String {
-        Uuid::from_bytes(self.keychain_identifier).to_string()
+        Uuid::from_bytes(self.keychain_identifier).to_string().to_uppercase()
     }
 }
 pub struct AnisetteClient {
@@ -179,7 +178,7 @@ impl AnisetteClient {
         // missing: Connection, Accept-Encdoing
         builder = builder.header("User-Agent", &self.login_info.akd_user_agent)
             .header("X-Apple-Baa-E", "-10000")
-            .header("X-Apple-I-MD-LU", encode_hex(&state.md_lu()))
+            .header("X-Apple-I-MD-LU", state.md_lu())
             .header("X-Mme-Device-Id", state.device_id())
             .header("X-Apple-Baa-Avail", "2")
             .header("X-Mme-Client-Info", &self.login_info.mme_client_info)
@@ -246,7 +245,7 @@ impl AnisetteClient {
                     one_time_password,
                     routing_info,
                     device_description: self.login_info.mme_client_info.clone(),
-                    local_user_id: encode_hex(&state.md_lu()),
+                    local_user_id: state.md_lu(),
                     device_unique_identifier: state.device_id()
                 })
             }
