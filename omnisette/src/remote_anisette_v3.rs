@@ -311,6 +311,9 @@ impl AnisetteClient {
                             .body(plist_to_string(&body_data)?)
                             .send().await?;
                         let text = resp.text().await?;
+                        if !text.contains("spim") {
+                            eprintln!("[omnisette] start_provisioning response ({} bytes): {}", text.len(), &text[..text.len().min(2000)]);
+                        }
 
                         let protocol_val = plist::Value::from_reader(Cursor::new(text.as_str()))?;
                         let spim = protocol_val.as_dictionary().unwrap().get("Response").unwrap().as_dictionary().unwrap()
@@ -331,6 +334,9 @@ impl AnisetteClient {
                             .body(plist_to_string(&body_data)?)
                             .send().await?;
                         let text = resp.text().await?;
+                        if !text.contains("ptm") {
+                            eprintln!("[omnisette] end_provisioning response ({} bytes): {}", text.len(), &text[..text.len().min(3000)]);
+                        }
 
                         let protocol_val = plist::Value::from_reader(Cursor::new(text.as_str()))?;
                         let response = protocol_val.as_dictionary().unwrap().get("Response").unwrap().as_dictionary().unwrap();
