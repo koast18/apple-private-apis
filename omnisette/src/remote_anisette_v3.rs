@@ -391,8 +391,27 @@ impl RemoteAnisetteProviderV3 {
     }
 }
 
+static STATELESS_HEADERS: tokio::sync::OnceCell<HashMap<String, String>> = tokio::sync::OnceCell::const_new();
+
+/// 无状态 anisette 服务（kind 2，如 new.ani.sidestore.io / mac-ani.jkcoxson.com）：
+/// GET {url} 直接返回 X-Apple-I-MD* 等一整套头，不需要 provisioning。
+async fn stateless_headers(url: &str) -> Result<HashMap<String, String>, AnisetteError> {
+    let map = STATELESS_HEADERS
+        .get_or_try_init(|| async {
+            let client = make_reqwest()?;
+            let resp = client.get(url).send().await?;
+            let map: HashMap<String, String> = resp.json().await?;
+            Ok::<HashMap<String, String>, AnisetteError>(map)
+        })
+        .await?;
+    Ok(map.clone())
+}
+
 impl AnisetteProvider for RemoteAnisetteProviderV3 {
     async fn get_anisette_headers(&mut self) -> Result<HashMap<String, String>, AnisetteError> {
+        if std::env::var("ANISETTE_STATELESS").map(|v| v != "0").unwrap_or(false) {
+            return stateless_headers(&self.client_url).await;
+        }
         if self.client.is_none() {
             self.client = Some(AnisetteClient::new(self.client_url.clone(), self.info.clone()).await?);
         }
