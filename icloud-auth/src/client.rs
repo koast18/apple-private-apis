@@ -831,9 +831,10 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         if !res.status().is_success() {
             let status = res.status();
             let body = res.text().await.unwrap_or_default();
-            error!("send_2fa_to_devices failed: HTTP {} — body: {}", status, body);
+            eprintln!("[icloud-auth] send_2fa_to_devices failed: HTTP {} — body: {}", status, &body[..body.len().min(800)]);
             return Err(Error::AuthSrp);
         }
+        eprintln!("[icloud-auth] send_2fa_to_devices ok (HTTP {})", res.status());
 
         return Ok(LoginState::Needs2FAVerification);
     }
@@ -859,6 +860,9 @@ impl<T: AnisetteProvider> AppleAccount<T> {
             .send().await?;
 
         if !res.status().is_success() {
+            let st = res.status();
+            let b = res.text().await.unwrap_or_default();
+            eprintln!("[icloud-auth] send_sms_2fa failed: HTTP {} — body: {}", st, &b[..b.len().min(800)]);
             return Err(Error::AuthSrp);
         }
 
