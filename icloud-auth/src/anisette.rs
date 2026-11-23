@@ -20,12 +20,17 @@ impl AnisetteData {
         // user must supply, content-type and accept
         // unaccounted headers: Accept-Encoding, Connection, Host
         const ACCEPTABLE_HEADERS: &[&'static str] = &["X-Apple-I-MD-LU", "X-Apple-I-MD-RINFO", "X-Apple-I-MD-M", "X-Apple-I-MD", "X-Mme-Device-Id"];
+        // 如果 anisette 服务给了 X-MMe-Client-Info（例如 Mac ADI），以它为准，
+        // 否则 Apple 会认为 cpd/MD 的机器与我们自报的机型不一致 → -22410
+        let mme_info = self.base_headers.get("X-MMe-Client-Info")
+            .cloned()
+            .unwrap_or_else(|| self.client_info.mme_client_info_akd.clone());
         self.base_headers.clone().into_iter().filter(|(key, _)| ACCEPTABLE_HEADERS.contains(&key.as_str()))
             .chain([
                 ("X-Apple-AK-Context-Type", self.client_info.ak_context_type.as_str()),
                 ("X-Apple-Client-App-Name", &self.client_info.client_app_name),
                 ("X-Apple-I-Client-Bundle-Id", &self.client_info.client_bundle_id),
-                ("X-MMe-Client-Info", &self.client_info.mme_client_info_akd),
+                ("X-MMe-Client-Info", mme_info.as_str()),
                 ("Accept-Language", "en-US,en;q=0.9"),
                 ("User-Agent", &self.client_info.akd_user_agent),
             ].into_iter().map(|(a, b)| (a.to_string(), b.to_string())))
