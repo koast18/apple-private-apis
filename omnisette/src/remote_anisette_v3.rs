@@ -267,7 +267,9 @@ impl AnisetteClient {
         let end_provisioning_url = urls.get("midFinishProvisioning").unwrap().as_string().unwrap();
         debug!("Got provisioning urls: {} and {}", start_provisioning_url, end_provisioning_url);
 
-        let provision_ws_url = format!("{}/v3/provisioning_session", self.url).replace("https://", "wss://");
+        let provision_ws_url = format!("{}/v3/provisioning_session", self.url)
+        .replace("https://", "wss://")
+        .replace("http://", "ws://");
         let (mut connection, _) = connect_async(&provision_ws_url).await?;
 
 
