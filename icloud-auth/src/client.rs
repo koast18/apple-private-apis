@@ -1126,6 +1126,7 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         headers.insert("Accept-Language", HeaderValue::from_str("en-us").unwrap());
         // findmy.py 的 2FA 请求都带这个头，缺了会被 GSA 判 401
         headers.insert("X-Apple-App-Info", HeaderValue::from_str("com.apple.gs.xcode.auth").unwrap());
+        headers.insert("X-Apple-ADSID", HeaderValue::from_str(dsid).unwrap());
         headers.append(
             "X-Apple-I-Identity-Id",
             HeaderValue::from_str(&identity_token).unwrap(),
