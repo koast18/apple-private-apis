@@ -336,6 +336,27 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         }
     }
 
+    /// 用缓存的 SPD 恢复登录态（避免每次跑都要 2FA）
+    pub fn restore_from_spd(&mut self, spd: plist::Dictionary) {
+        if let Some(Value::Dictionary(dict)) = spd.get("t") {
+            let keys: HashMap<String, FetchedToken> = dict.iter().filter_map(|(service, value)| {
+                Some((service.clone(), FetchedToken {
+                    token: value.as_dictionary()?.get("token")?.as_string()?.to_string(),
+                    expiration: if let Some(expiry) = value.as_dictionary()?.get("expiry") {
+                        SystemTime::UNIX_EPOCH + Duration::from_millis(expiry.as_unsigned_integer()?)
+                    } else {
+                        SystemTime::now() + Duration::from_secs(value.as_dictionary()?.get("duration")?.as_unsigned_integer()?)
+                    },
+                }))
+            }).collect();
+            self.tokens = keys;
+        }
+        if let Some(name) = spd.get("acname").and_then(|v| v.as_string()) {
+            self.username = Some(name.to_string());
+        }
+        self.spd = Some(spd);
+    }
+
     pub fn get_pet(&self) -> Option<String> {
         self.tokens.get("com.apple.gs.idms.pet").map(|t| &t.token).cloned()
     }
