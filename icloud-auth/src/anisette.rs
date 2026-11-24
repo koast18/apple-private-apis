@@ -154,7 +154,7 @@ impl AnisetteData {
 
     pub fn get_extra_headers(&self) -> HashMap<String, String> {
         // unaccounted headers: Accept-Encoding, Connection, Host, content-type
-        const ACCEPTABLE_HEADERS: &[&'static str] = &["X-Apple-I-MD-LU", "X-Apple-I-MD-RINFO", "X-Apple-I-MD-M", "X-Apple-I-MD", "X-Mme-Device-Id"];
+        const ACCEPTABLE_HEADERS: &[&'static str] = &["X-Apple-I-MD-LU", "X-Apple-I-MD-RINFO", "X-Apple-I-MD-M", "X-Apple-I-MD", "X-Mme-Device-Id", "X-Apple-I-Client-Time", "X-Apple-I-TimeZone"];
         self.base_headers.clone().into_iter().filter(|(key, _)| ACCEPTABLE_HEADERS.contains(&key.as_str()))
             .chain([
                 ("X-Apple-Client-App-Name", self.client_info.client_app_name.as_str()),
