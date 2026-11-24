@@ -336,6 +336,22 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         }
     }
 
+    /// 导出当前令牌（含 com.apple.gs.idms.pet），用于跨进程复用登录态
+    pub fn export_tokens_plist(&self) -> plist::Dictionary {
+        let mut dict = plist::Dictionary::new();
+        for (service, tok) in self.tokens.iter() {
+            let mut inner = plist::Dictionary::new();
+            inner.insert("token".to_string(), plist::Value::String(tok.token.clone()));
+            let exp = tok.expiration
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .map(|d| d.as_millis() as u64)
+                .unwrap_or(0);
+            inner.insert("expiry".to_string(), plist::Value::from(exp));
+            dict.insert(service.clone(), plist::Value::Dictionary(inner));
+        }
+        dict
+    }
+
     /// 用缓存的 SPD 恢复登录态（避免每次跑都要 2FA）
     pub fn restore_from_spd(&mut self, spd: plist::Dictionary) {
         if let Some(Value::Dictionary(dict)) = spd.get("t") {
