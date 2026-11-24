@@ -430,6 +430,10 @@ impl<T: AnisetteProvider> AppleAccount<T> {
             let token = spd.get("GsIdmsToken").unwrap().as_string().unwrap();
 
             let identity_token = base64::encode(format!("{}:{}", dsid, token));
+        eprintln!("[icloud-auth] 2fa identity: spd_keys={:?} adsid={} token_len={} token_head={}",
+            spd.iter().map(|(k, _)| k.clone()).collect::<Vec<_>>(),
+            dsid, token.len(), &token[..token.len().min(12)]);
+        eprintln!("[icloud-auth] identity_token = {}", &identity_token[..identity_token.len().min(48)]);
             gsa_headers.insert("X-Apple-Identity-Token", HeaderValue::from_str(&identity_token).unwrap());
         } else {
             let token = self.get_token("com.apple.gs.idms.hb").await.ok_or(Error::HappyBirthdayError)?;
@@ -1089,6 +1093,10 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         let token = spd.get("GsIdmsToken").unwrap().as_string().unwrap();
 
         let identity_token = base64::encode(format!("{}:{}", dsid, token));
+        eprintln!("[icloud-auth] 2fa identity: spd_keys={:?} adsid={} token_len={} token_head={}",
+            spd.iter().map(|(k, _)| k.clone()).collect::<Vec<_>>(),
+            dsid, token.len(), &token[..token.len().min(12)]);
+        eprintln!("[icloud-auth] identity_token = {}", &identity_token[..identity_token.len().min(48)]);
 
         let valid_anisette = self.get_anisette().await?;
 
