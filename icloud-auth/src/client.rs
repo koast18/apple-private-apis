@@ -895,8 +895,10 @@ impl<T: AnisetteProvider> AppleAccount<T> {
             warn!("Got auth response {}", base64::encode(&body));
             return Err(Error::FailedGetting2FAConfig);
         }
+        let status2 = req.status();
         let resp = req.bytes().await?;
-        info!("Got gsa auth extras {:?}", str::from_utf8(&resp).unwrap());
+        eprintln!("[icloud-auth] GET /auth -> {} body({}B): {}", status2,
+            resp.len(), String::from_utf8_lossy(&resp[..resp.len().min(600)]));
         let mut new_state: AuthenticationExtras = serde_json::from_slice(&resp)?;
         if new_state.trusted_phone_numbers.is_empty() {
             return Err(Error::HardwareKeyError);
