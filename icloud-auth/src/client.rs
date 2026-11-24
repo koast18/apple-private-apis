@@ -336,6 +336,21 @@ impl<T: AnisetteProvider> AppleAccount<T> {
         }
     }
 
+    /// 从缓存恢复令牌
+    pub fn import_tokens_plist(&mut self, dict: plist::Dictionary) {
+        let mut map = HashMap::new();
+        for (service, v) in dict.iter() {
+            let Some(d) = v.as_dictionary() else { continue };
+            let Some(tok) = d.get("token").and_then(|t| t.as_string()) else { continue };
+            let exp = d.get("expiry").and_then(|e| e.as_unsigned_integer()).unwrap_or(0);
+            map.insert(service.clone(), FetchedToken {
+                token: tok.to_string(),
+                expiration: SystemTime::UNIX_EPOCH + Duration::from_millis(exp),
+            });
+        }
+        if !map.is_empty() { self.tokens = map; }
+    }
+
     /// 导出当前令牌（含 com.apple.gs.idms.pet），用于跨进程复用登录态
     pub fn export_tokens_plist(&self) -> plist::Dictionary {
         let mut dict = plist::Dictionary::new();
