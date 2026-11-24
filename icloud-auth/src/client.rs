@@ -1111,6 +1111,13 @@ impl<T: AnisetteProvider> AppleAccount<T> {
             headers.insert("Accept", HeaderValue::from_str("text/x-xml-plist").unwrap());
         }
         // headers.insert("User-Agent", HeaderValue::from_str("Xcode").unwrap());
+        // 真正的 2FA 接口要的是 X-Apple-I-Identity-Id（base64(adsid:token)），
+        // 原来只发 X-Apple-Identity-Token，Apple 直接 401，导致 /auth 拿不到设备/手机号，
+        // 也因此 trusteddevice 推送不落地（手机上不弹窗）。
+        headers.append(
+            "X-Apple-I-Identity-Id",
+            HeaderValue::from_str(&identity_token).unwrap(),
+        );
         headers.append(
             "X-Apple-Identity-Token",
             HeaderValue::from_str(&identity_token).unwrap(),
