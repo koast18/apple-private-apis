@@ -1102,7 +1102,7 @@ impl<T: AnisetteProvider> AppleAccount<T> {
 
         let mut headers = HeaderMap::new();
         valid_anisette
-            .get_extra_headers()
+            .get_all_headers()
             .iter()
             .for_each(|(k, v)| {
                 headers.append(

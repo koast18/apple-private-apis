@@ -152,6 +152,11 @@ impl AnisetteData {
         ).chain(self.client_info.hardware_headers.clone().into_iter().map(|(a, b)| (a, Value::String(b)))).collect()
     }
 
+    /// 原样返回 anisette 服务器下发的整套头（2FA 请求需要，findmy.py 就是这么做的）
+    pub fn get_all_headers(&self) -> HashMap<String, String> {
+        self.base_headers.clone()
+    }
+
     pub fn get_extra_headers(&self) -> HashMap<String, String> {
         // unaccounted headers: Accept-Encoding, Connection, Host, content-type
         const ACCEPTABLE_HEADERS: &[&'static str] = &["X-Apple-I-MD-LU", "X-Apple-I-MD-RINFO", "X-Apple-I-MD-M", "X-Apple-I-MD", "X-Mme-Device-Id", "X-Apple-I-Client-Time", "X-Apple-I-TimeZone", "X-MMe-Client-Info"];
